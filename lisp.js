@@ -54,35 +54,49 @@ var Lisp = (function () {
 
     // evaluate lisp expressions
     function eval (sexp) {
-        // evaluate the conditions lists for "cond".
-        function eval_conditions(conditions) {
-            if (conditions === null) {
-                return null;
-            }
-
-            if (eval(car(car(conditions)))) {
-                return eval(car(cdr(car(conditions))));
-            }
-            else {
-                return eval_conditions(cdr(conditions));
-            }
-        }
 
         if (atom(sexp)) {
             return sexp;
         }
 
         if (atom(car(sexp))) {
-            if (eq(car(sexp), "quote")) { return car(cdr(sexp)); }
-            if (eq(car(sexp), "cond"))  { return eval_conditions(cdr(sexp)); }
-            if (eq(car(sexp), "atom"))  { return atom(eval(car(cdr(sexp)))); }
-            if (eq(car(sexp), "eq"))    { return eq(eval(car(cdr(sexp))), eval(car(cdr(cdr(sexp))))); }
-            if (eq(car(sexp), "car"))   { return car(eval(car(cdr(sexp)))); }
-            if (eq(car(sexp), "cdr"))   { return cdr(eval(car(cdr(sexp)))); }
-            if (eq(car(sexp), "cons"))  { return cons(eval(car(cdr(sexp))), eval(car(cdr(cdr(sexp))))); }
+            // Function calls
+            if (eq(car(sexp), "atom"))   { return atom(eval(car(cdr(sexp)))); }
+            if (eq(car(sexp), "eq"))     { return eq(eval(car(cdr(sexp))), eval(car(cdr(cdr(sexp))))); }
+            if (eq(car(sexp), "car"))    { return car(eval(car(cdr(sexp)))); }
+            if (eq(car(sexp), "cdr"))    { return cdr(eval(car(cdr(sexp)))); }
+            if (eq(car(sexp), "cons"))   { return cons(eval(car(cdr(sexp))), eval(car(cdr(cdr(sexp))))); }
+
+            // Special forms
+            if (eq(car(sexp), "progn"))  { return eval_progn(cdr(sexp)); }
+            if (eq(car(sexp), "quote"))  { return car(cdr(sexp)); }
+            if (eq(car(sexp), "cond"))   { return eval_conditions(cdr(sexp)); }
         }
 
         throw "Can't evaluate.";
+    }
+
+    // evaluate the conditions lists for "cond".
+    function eval_conditions(conditions) {
+        if (conditions === null) {
+            return null;
+        }
+
+        if (eval(car(car(conditions)))) {
+            return eval(car(cdr(car(conditions))));
+        }
+        else {
+            return eval_conditions(cdr(conditions));
+        }
+    }
+
+    function eval_progn(forms, last) {
+        if (forms === null) {
+            return last;
+        }
+        else {
+            return eval_progn(cdr(forms), eval(car(forms)));
+        }
     }
 
     ////////////////////////////////////////////////////////////////////////////////
