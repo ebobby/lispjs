@@ -2,14 +2,17 @@
 // Very simple Lisp on Javascript system
 // Author: Francisco Soto <ebobby@ebobby.org>
 ////////////////////////////////////////////////////////////////////////////////////////////
+
 var Lisp = (function () {
-    // This is what a cons cell is like.
-    function _cell (car, cdr) {
-        this.car = car;
-        this.cdr = cdr;
+    // Supported Lisp objects.
+    var Objects = {
+        cons_cell: function (car, cdr) {
+            this.car = car;
+            this.cdr = cdr;
+        }
     }
 
-    // js lisp read, transforms arrays to cons cells.
+    // js lisp read, transform javascript objects into lisp objects.
     function read (exp) {
         if (Array.isArray(exp)) {
             if (exp.length == 0) {
@@ -23,7 +26,7 @@ var Lisp = (function () {
         }
     }
 
-    // js lisp print, transforms cons cells into arrays and rely on js printer.
+    // js lisp print, transforms lisp objects into js objects and rely on the js printer.
     function print (sexp, acc) {
         if (sexp === null) {
             if (acc) {
@@ -52,9 +55,8 @@ var Lisp = (function () {
         }
     }
 
-    // evaluate lisp expressions
+    // evaluate lisp expressions (formed by lisp objects)
     function eval (sexp) {
-
         if (atom(sexp)) {
             return sexp;
         }
@@ -76,7 +78,6 @@ var Lisp = (function () {
         throw "Can't evaluate.";
     }
 
-    // evaluate the conditions lists for "cond".
     function eval_conditions(conditions) {
         if (conditions === null) {
             return null;
@@ -100,10 +101,10 @@ var Lisp = (function () {
     }
 
     ////////////////////////////////////////////////////////////////////////////////
-    // Base Lisp functions
+    // Lisp primitives
     ////////////////////////////////////////////////////////////////////////////////
     function cons (car, cdr) {
-        return new _cell(car, cdr);
+        return new Objects.cons_cell(car, cdr);
     }
 
     function car (obj) {
@@ -115,7 +116,7 @@ var Lisp = (function () {
     }
 
     function atom (exp) {
-        return !(exp instanceof _cell);
+        return !(exp instanceof Objects.cons_cell);
     }
 
     function eq (obj1, obj2) {
