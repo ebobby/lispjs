@@ -2,20 +2,101 @@
 // Very simple Lisp on Javascript system
 // Author: Francisco Soto <ebobby@ebobby.org>
 ////////////////////////////////////////////////////////////////////////////////////////////
-
 var Lisp = (function () {
-    // Supported Lisp objects.
+    ////////////////////////////////////////////////////////////////////////////////
+    // Lisp objects
+    ////////////////////////////////////////////////////////////////////////////////
     var Objects = {
         cons_cell: function (car, cdr) {
             this.car = car;
             this.cdr = cdr;
         }
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // Lisp primitives
+    ////////////////////////////////////////////////////////////////////////////////
+    function cons (car, cdr) {
+        return new Objects.cons_cell(car, cdr);
     }
 
-    // js lisp read, transform javascript objects into lisp objects.
+    function car (obj) {
+        return obj.car;
+    }
+
+    function cdr (obj) {
+        return obj.cdr;
+    }
+
+    function atom (exp) {
+        return !(exp instanceof Objects.cons_cell);
+    }
+
+    function eq (obj1, obj2) {
+        return obj1 === obj2;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // Lisp system (read/eval/print)
+    ////////////////////////////////////////////////////////////////////////////////
+
+    // Evaluate special form cond
+    function eval_cond (sexp) {
+        function eval_conditions(conditions) {
+            if (conditions === null) {
+                return null;
+            }
+
+            if (leval(car(car(conditions)))) {
+                return leval(car(cdr(car(conditions))));
+            }
+            else {
+                return eval_conditions(cdr(conditions));
+            }
+        }
+
+        return eval_conditions(cdr(sexp));
+    }
+
+    // Evaluate special form progn
+    function eval_progn(sexp) {
+        function eval_forms(forms, last) {
+            if (forms === null) {
+                return last;
+            }
+            else {
+                return eval_forms(cdr(forms), leval(car(forms)));
+            }
+        }
+
+        return eval_forms(cdr(sexp), null);
+    }
+
+    function leval (sexp) { // eval is a reserved word so we call this leval instead.
+        if (atom(sexp)) {
+            return sexp;
+        }
+
+        if (atom(car(sexp))) {
+            // Function calls
+            if (eq(car(sexp), "atom"))   { return atom(leval(car(cdr(sexp)))); }
+            if (eq(car(sexp), "car"))    { return car(leval(car(cdr(sexp)))); }
+            if (eq(car(sexp), "cdr"))    { return cdr(leval(car(cdr(sexp)))); }
+            if (eq(car(sexp), "eq"))     { return eq(leval(car(cdr(sexp))), leval(car(cdr(cdr(sexp))))); }
+            if (eq(car(sexp), "cons"))   { return cons(leval(car(cdr(sexp))), leval(car(cdr(cdr(sexp))))); }
+
+            // Special forms
+            if (eq(car(sexp), "quote"))  { return car(cdr(sexp)); }
+            if (eq(car(sexp), "progn"))  { return eval_progn(sexp); }
+            if (eq(car(sexp), "cond"))   { return eval_cond(sexp); }
+        }
+
+        throw "Can't evaluate.";
+    }
+
     function read (exp) {
         if (Array.isArray(exp)) {
-            if (exp.length == 0) {
+            if (exp.length === 0) {
                 return null;
             }
 
@@ -26,7 +107,6 @@ var Lisp = (function () {
         }
     }
 
-    // js lisp print, transforms lisp objects into js objects and rely on the js printer.
     function print (sexp, acc) {
         if (sexp === null) {
             if (acc) {
@@ -55,78 +135,12 @@ var Lisp = (function () {
         }
     }
 
-    // evaluate lisp expressions (formed by lisp objects)
-    function eval (sexp) {
-        if (atom(sexp)) {
-            return sexp;
-        }
-
-        if (atom(car(sexp))) {
-            // Function calls
-            if (eq(car(sexp), "atom"))   { return atom(eval(car(cdr(sexp)))); }
-            if (eq(car(sexp), "eq"))     { return eq(eval(car(cdr(sexp))), eval(car(cdr(cdr(sexp))))); }
-            if (eq(car(sexp), "car"))    { return car(eval(car(cdr(sexp)))); }
-            if (eq(car(sexp), "cdr"))    { return cdr(eval(car(cdr(sexp)))); }
-            if (eq(car(sexp), "cons"))   { return cons(eval(car(cdr(sexp))), eval(car(cdr(cdr(sexp))))); }
-
-            // Special forms
-            if (eq(car(sexp), "progn"))  { return eval_progn(cdr(sexp)); }
-            if (eq(car(sexp), "quote"))  { return car(cdr(sexp)); }
-            if (eq(car(sexp), "cond"))   { return eval_conditions(cdr(sexp)); }
-        }
-
-        throw "Can't evaluate.";
-    }
-
-    function eval_conditions(conditions) {
-        if (conditions === null) {
-            return null;
-        }
-
-        if (eval(car(car(conditions)))) {
-            return eval(car(cdr(car(conditions))));
-        }
-        else {
-            return eval_conditions(cdr(conditions));
-        }
-    }
-
-    function eval_progn(forms, last) {
-        if (forms === null) {
-            return last;
-        }
-        else {
-            return eval_progn(cdr(forms), eval(car(forms)));
-        }
-    }
-
     ////////////////////////////////////////////////////////////////////////////////
-    // Lisp primitives
+    // Lisp system interface
     ////////////////////////////////////////////////////////////////////////////////
-    function cons (car, cdr) {
-        return new Objects.cons_cell(car, cdr);
-    }
-
-    function car (obj) {
-        return obj.car;
-    }
-
-    function cdr (obj) {
-        return obj.cdr;
-    }
-
-    function atom (exp) {
-        return !(exp instanceof Objects.cons_cell);
-    }
-
-    function eq (obj1, obj2) {
-        return obj1 === obj2;
-    }
-
-    // The system public interface.
     return {
         eval: function (exp) {
-            return print(eval(read(exp)));
+            return print(leval(read(exp)));
         }
-    }
+    };
 })();
