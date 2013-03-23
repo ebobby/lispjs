@@ -5,7 +5,7 @@ This has no practical use whatsoever is just a simple artifact out of explorator
 
 The code is simple and clean enough so it can be read and understood if you are curious about Lisp and language implementation but I am not a compiler/interpreter programmer by any means so I am not sure if this code can be used as a reference for that matter.
 
-I wrote this README just to make clear what the "interpreter" can do. Again, this has much practical use as [brain fuck](http://en.wikipedia.org/wiki/Brainfuck).
+I wrote this README just to make clear what the "interpreter" can do. Again, this has as much practical use as [brain fuck](http://en.wikipedia.org/wiki/Brainfuck).
 
 ## Syntax
 
