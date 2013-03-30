@@ -57,7 +57,6 @@ var Lisp = (function () {
 
                 process_env(lambda_list, args);  // Add the parameters to the function environment
                 return leval(body, env);         // eval the function body inside the lexical environment and arguments
-
             };
         }
     };
