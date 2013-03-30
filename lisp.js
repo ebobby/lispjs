@@ -89,6 +89,14 @@ var Lisp = (function () {
         return eq(typeof(obj), "function");
     }
 
+    function apply (func, args) {
+        if (!functionp(func)) {
+            throw "Invalid function call!";
+        }
+
+        return func.call(null, args);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////
     // Lisp system (read/eval/print)
     ////////////////////////////////////////////////////////////////////////////////
@@ -176,6 +184,7 @@ var Lisp = (function () {
             if (eq(car(sexp), "functionp")) { return functionp(leval(car(cdr(sexp)), env)); }
             if (eq(car(sexp), "eq"))        { return eq(leval(car(cdr(sexp)), env), leval(car(cdr(cdr(sexp))), env)); }
             if (eq(car(sexp), "cons"))      { return cons(leval(car(cdr(sexp)), env), leval(car(cdr(cdr(sexp))), env)); }
+            if (eq(car(sexp), "apply"))     { return apply(leval(car(cdr(sexp)), env), leval(car(cdr(cdr(sexp))))); }
 
             // Special forms
             if (eq(car(sexp), "quote"))  { return car(cdr(sexp)); }

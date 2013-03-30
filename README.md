@@ -173,6 +173,19 @@ false
 true
 ```
 
+### apply
+
+Calls a function using the given list as arguments for it.
+
+```Javascript
+> Lisp.run( [ "apply", [ "lambda", ["x"], "x" ], [ "quote", [ 1 ] ] ])
+1
+> Lisp.run( [ "apply", [ "lambda", ["x", "y"], [ "cons", "y", "x" ] ], [ "quote", [ 1 ] ] ])
+Invalid number of arguments!
+> Lisp.run( [ "apply", [ "lambda", ["x", "y"], [ "cons", "y", "x" ] ], [ "quote", [ 1, 2 ] ] ])
+[ 2, '.', 1 ]
+```
+
 ## Final remarks
 
 That's pretty much it, enjoy.
