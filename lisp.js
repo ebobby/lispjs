@@ -40,27 +40,23 @@ var Lisp = (function () {
             env = clone(env);            // We do not want to overwrite other functions environments
             body = cons("progn", body);  // lambda body has an implicit progn
 
-            return function () {
-                function process_env(lambda_list, index, lambda_arguments) {
-                    if (eq(lambda_list, null)) {
-                        if (index < lambda_arguments.length) {
-                            throw "Invalid number of arguments!";
-                        }
-
-                        return;
-                    }
-
-                    if (!eq(lambda_list, null) && eq(index, lambda_arguments.length)) {
+            return function (args) {
+                function process_env(lambda_list, lambda_arguments) {
+                    if ( (eq(lambda_list, null) && !eq(lambda_arguments, null)) ||
+                        (!eq(lambda_list, null) &&  eq(lambda_arguments, null))) {
                         throw "Invalid number of arguments!";
                     }
 
-                    // set the argument variable in the environment to the passed value.
-                    env[car(lambda_list)] = lambda_arguments[index];
-                    process_env(cdr(lambda_list), ++index, lambda_arguments);
+                    if (eq(lambda_arguments, null)) {
+                        return;
+                    }
+
+                    env[car(lambda_list)] = car(lambda_arguments);
+                    process_env(cdr(lambda_list), cdr(lambda_arguments));
                 }
 
-                process_env(lambda_list, 0, arguments);  // Add the parameters to the function environment
-                return leval(body, env);                 // eval the function body inside the lexical environment and arguments
+                process_env(lambda_list, args);  // Add the parameters to the function environment
+                return leval(body, env);         // eval the function body inside the lexical environment and arguments
 
             };
         }
@@ -142,20 +138,19 @@ var Lisp = (function () {
 
     // Eval a function invocation
     function eval_func_invoke(func, params, env) {
-        function eval_params(args, evaled_args) {
+        function eval_params(args) {
             if (eq(args, null)) {
-                return evaled_args;
+                return null;
             }
 
-            evaled_args.push(leval(car(args), env));
-            return eval_params(cdr(args), evaled_args);
+            return cons(leval(car(args), env), eval_params(cdr(args)));
         }
 
         if (!functionp(func)) {
             throw "Invalid function call!";
         }
 
-        return func.apply(null, eval_params(params, []));
+        return func.call(null, eval_params(params, null));
     }
 
     // eval is a reserved word so we call this leval instead.
